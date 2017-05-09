@@ -61,7 +61,7 @@ class DummyUpload(object):
 
 
 @ddt
-class StaffGradedAssignmentXblockTests(ModuleStoreTestCase):
+class StaffGradedXBlockTests(ModuleStoreTestCase):
     """
     Create a SGA block with mock data.
     """
@@ -70,7 +70,7 @@ class StaffGradedAssignmentXblockTests(ModuleStoreTestCase):
         Creates a test course ID, mocks the runtime, and creates a fake storage
         engine for use in all tests
         """
-        super(StaffGradedAssignmentXblockTests, self).setUp()
+        super(StaffGradedXBlockTests, self).setUp()
         course = CourseFactory.create(org='foo', number='bar', display_name='baz')
         self.course_id = course.id
         self.runtime = mock.Mock(anonymous_student_id='MOCK')
@@ -87,7 +87,7 @@ class StaffGradedAssignmentXblockTests(ModuleStoreTestCase):
         """
         Creates a XBlock SGA for testing purpose.
         """
-        from edx_sga.sga import StaffGradedAssignmentXBlock as cls
+        from edx_sga.sga import StaffGradedXBlock as cls
         field_data = DictFieldData(kw)
         block = cls(self.runtime, field_data, self.scope_ids)
         block.location = Location(
@@ -231,7 +231,7 @@ class StaffGradedAssignmentXblockTests(ModuleStoreTestCase):
         fragment.add_css.assert_called_once_with(
             DummyResource("static/css/edx_sga.css"))
         fragment.initialize_js.assert_called_once_with(
-            "StaffGradedAssignmentXBlock")
+            "StaffGradedXBlock")
 
     @mock.patch('edx_sga.sga._resource', DummyResource)
     @mock.patch('edx_sga.sga.render_template')
@@ -300,7 +300,7 @@ class StaffGradedAssignmentXblockTests(ModuleStoreTestCase):
         fragment.add_css.assert_called_once_with(
             DummyResource("static/css/edx_sga.css"))
         fragment.initialize_js.assert_called_once_with(
-            "StaffGradedAssignmentXBlock")
+            "StaffGradedXBlock")
 
     @mock.patch('edx_sga.sga._resource', DummyResource)
     @mock.patch('edx_sga.sga.render_template')
@@ -328,7 +328,7 @@ class StaffGradedAssignmentXblockTests(ModuleStoreTestCase):
         fragment.add_javascript.assert_called_once_with(
             DummyResource("static/js/src/studio.js"))
         fragment.initialize_js.assert_called_once_with(
-            "StaffGradedAssignmentXBlock")
+            "StaffGradedXBlock")
 
     def test_save_sga(self):
         """
@@ -403,7 +403,7 @@ class StaffGradedAssignmentXblockTests(ModuleStoreTestCase):
         self.assertEqual(response.body, expected)
 
         with patch(
-            "edx_sga.sga.StaffGradedAssignmentXBlock._file_storage_path",
+            "edx_sga.sga.StaffGradedXBlock._file_storage_path",
             return_value=block._file_storage_path("", "test_notfound.txt")
         ):
             response = block.download_assignment(None)
@@ -427,7 +427,7 @@ class StaffGradedAssignmentXblockTests(ModuleStoreTestCase):
         self.assertEqual(response.body, expected)
 
         with patch(
-            "edx_sga.sga.StaffGradedAssignmentXBlock._file_storage_path",
+            "edx_sga.sga.StaffGradedXBlock._file_storage_path",
             return_value=block._file_storage_path("", "test_notfound.txt")
         ):
             response = block.staff_download_annotated(mock.Mock(params={
@@ -452,7 +452,7 @@ class StaffGradedAssignmentXblockTests(ModuleStoreTestCase):
         self.assertEqual(response.body, expected)
 
         with patch(
-            "edx_sga.sga.StaffGradedAssignmentXBlock._file_storage_path",
+            "edx_sga.sga.StaffGradedXBlock._file_storage_path",
             return_value=block._file_storage_path("", "test_notfound.txt")
         ):
             response = block.download_annotated(None)
@@ -474,7 +474,7 @@ class StaffGradedAssignmentXblockTests(ModuleStoreTestCase):
         self.assertEqual(response.body, expected)
 
         with patch(
-            "edx_sga.sga.StaffGradedAssignmentXBlock._file_storage_path",
+            "edx_sga.sga.StaffGradedXBlock._file_storage_path",
             return_value=block._file_storage_path("", "test_notfound.txt")
         ):
             response = block.staff_download(mock.Mock(params={
@@ -499,7 +499,7 @@ class StaffGradedAssignmentXblockTests(ModuleStoreTestCase):
         self.assertEqual(response.body, expected)
 
         with patch(
-            "edx_sga.sga.StaffGradedAssignmentXBlock._file_storage_path",
+            "edx_sga.sga.StaffGradedXBlock._file_storage_path",
             return_value=block._file_storage_path("", "test_notfound.txt")
         ):
             response = block.download_annotated(None)
@@ -520,7 +520,7 @@ class StaffGradedAssignmentXblockTests(ModuleStoreTestCase):
             'student_id': student['item'].student_id}))
         self.assertEqual(response.body, expected)
         with patch(
-            "edx_sga.sga.StaffGradedAssignmentXBlock._file_storage_path",
+            "edx_sga.sga.StaffGradedXBlock._file_storage_path",
             return_value=block._file_storage_path("", "test_notfound.txt")
         ):
             response = block.staff_download(mock.Mock(params={

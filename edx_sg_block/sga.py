@@ -21,7 +21,7 @@ from django.core.files.storage import default_storage
 from django.conf import settings
 from django.template import Context, Template
 
-from student.models import user_by_anonymous_id
+from student.models import user_by_anonymous_id, CourseEnrollment
 from submissions import api as submissions_api
 from submissions.models import StudentItem as SubmissionsStudent
 
@@ -55,7 +55,7 @@ def reify(meth):
     return property(getter)
 
 
-class StaffGradedAssignmentXBlock(XBlock):
+class StaffGradedXBlock(XBlock):
     """
     This block defines a Staff Graded Assignment.  Students are shown a rubric
     and invited to upload a file which is then graded by staff.
@@ -191,7 +191,7 @@ class StaffGradedAssignmentXBlock(XBlock):
     def student_view(self, context=None):
         # pylint: disable=no-member
         """
-        The primary view of the StaffGradedAssignmentXBlock, shown to students
+        The primary view of the StaffGradedXBlock, shown to students
         when viewing courses.
         """
         context = {
@@ -216,7 +216,7 @@ class StaffGradedAssignmentXBlock(XBlock):
         fragment.add_css(_resource("static/css/edx_sga.css"))
         fragment.add_javascript(_resource("static/js/src/edx_sga.js"))
         fragment.add_javascript(_resource("static/js/src/jquery.tablesorter.min.js"))
-        fragment.initialize_js('StaffGradedAssignmentXBlock')
+        fragment.initialize_js('StaffGradedXBlock')
         return fragment
 
     def update_staff_debug_context(self, context):
@@ -276,18 +276,15 @@ class StaffGradedAssignmentXBlock(XBlock):
             information will be used on grading screen
             """
             # Submissions doesn't have API for this, just use model directly.
-            students = SubmissionsStudent.objects.filter(
-                course_id=self.course_id,
-                item_id=self.block_id)
+            students = CourseEnrollment.objects.filter(
+                course_id=self.course_id).values_list('user', flat=True)
             for student in students:
-                submission = self.get_submission(student.student_id)
-                if not submission:
-                    continue
-                user = user_by_anonymous_id(student.student_id)
                 module, created = StudentModule.objects.get_or_create(
                     course_id=self.course_id,
                     module_state_key=self.location,
-                    student=user,
+                    student=student,
+                    grade=0,
+                    max_grade=100,
                     defaults={
                         'state': '{}',
                         'module_type': self.category,
@@ -301,29 +298,16 @@ class StaffGradedAssignmentXBlock(XBlock):
                     )
 
                 state = json.loads(module.state)
-                score = self.get_score(student.student_id)
-                approved = score is not None
-                if score is None:
-                    score = state.get('staff_score')
-                    needs_approval = score is not None
-                else:
-                    needs_approval = False
+                score = module.score
                 instructor = self.is_instructor()
                 yield {
                     'module_id': module.id,
-                    'student_id': student.student_id,
-                    'submission_id': submission['uuid'],
+                    'student_id': student.id,
                     'username': module.student.username,
                     'fullname': module.student.profile.name,
-                    'filename': submission['answer']["filename"],
-                    'timestamp': submission['created_at'].strftime(
-                        DateTime.DATETIME_FORMAT
-                    ),
                     'score': score,
-                    'approved': approved,
                     'needs_approval': instructor and needs_approval,
                     'may_grade': instructor or not approved,
-                    'annotated': state.get("annotated_filename"),
                     'comment': state.get("comment", ''),
                 }
 
@@ -364,7 +348,7 @@ class StaffGradedAssignmentXBlock(XBlock):
                 )
             )
             fragment.add_javascript(_resource("static/js/src/studio.js"))
-            fragment.initialize_js('StaffGradedAssignmentXBlock')
+            fragment.initialize_js('StaffGradedXBlock')
             return fragment
         except:  # pragma: NO COVER
             log.error("Don't swallow my exceptions", exc_info=True)

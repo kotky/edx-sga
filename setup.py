@@ -15,11 +15,11 @@ def package_data(pkg, root_list):
     return {pkg: data}
 
 setup(
-    name='edx-sga',
+    name='edx-sg-block',
     version='0.6.3',
-    description='edx-sga Staff Graded Assignment XBlock',
+    description='edx-sg-block Staff Graded XBlock',
     license='Affero GNU General Public License v3 (GPLv3)',
-    url="https://github.com/mitodl/edx-sga",
+    url="https://github.com/kotky/edx-sga",
     author="MITx",
     zip_safe=False,
     packages=find_packages(),
@@ -29,8 +29,8 @@ setup(
     ],
     entry_points={
         'xblock.v1': [
-            'edx_sga = edx_sga.sga:StaffGradedAssignmentXBlock',
+            'edx_sg_block = edx_sg_block.sga:StaffGradedXBlock',
         ]
     },
-    package_data=package_data("edx_sga", ["static", "templates"]),
+    package_data=package_data("edx_sg_block", ["static", "templates"]),
 )

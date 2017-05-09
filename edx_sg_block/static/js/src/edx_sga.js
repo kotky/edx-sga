@@ -1,5 +1,5 @@
-/* Javascript for StaffGradedAssignmentXBlock. */
-function StaffGradedAssignmentXBlock(runtime, element) {
+/* Javascript for StaffGradedXBlock. */
+function StaffGradedXBlock(runtime, element) {
     function xblock($, _) {
         var uploadUrl = runtime.handlerUrl(element, 'upload_assignment');
         var downloadUrl = runtime.handlerUrl(element, 'download_assignment');
