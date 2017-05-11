@@ -250,7 +250,6 @@ class StaffGradedXBlock(XBlock):
 
         return {
             "display_name": self.display_name,
-            "uploaded": uploaded,
             "annotated": annotated,
             "graded": graded,
             "max_score": self.max_score(),
