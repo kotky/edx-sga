@@ -279,7 +279,7 @@ class StaffGradedXBlock(XBlock):
             course_enrollments = CourseEnrollment.objects.filter(
                 course_id=self.course_id)
             for course_enrollment in course_enrollments:
-                student = course_enrollments.user
+                student = course_enrollment.user
                 module, created = StudentModule.objects.get_or_create(
                     course_id=self.course_id,
                     module_state_key=self.location,
