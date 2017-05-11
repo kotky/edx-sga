@@ -65,7 +65,7 @@ class StaffGradedXBlock(XBlock):
     STUDENT_FILEUPLOAD_MAX_SIZE = 4 * 1000 * 1000  # 4 MB
 
     display_name = String(
-        default='Staff Graded Assignment', scope=Scope.settings,
+        default='Staff Graded Points', scope=Scope.settings,
         help="This name appears in the horizontal navigation at the top of "
              "the page."
     )
@@ -230,17 +230,19 @@ class StaffGradedXBlock(XBlock):
             annotated = {"filename": self.annotated_filename}
         else:
             annotated = None
-        # student_record = StudentModule.objects.get_or_create(
-        #             course_id=self.course_id,
-        #             module_state_key=self.location,
-        #             student=student,
-        #             defaults={
-        #                 'state': '{}',
-        #                 'module_type': self.category,
-        #                 'grade': 0,     
-        #                 'max_grade': 100
-        #             })
-        score = self.score
+        if self.xmodule_runtime.anonymous_student_id:
+            user = user_by_anonymous_id(self.xmodule_runtime.anonymous_student_id)
+        student_record, created = StudentModule.objects.get_or_create(
+                     course_id=self.course_id,
+                     module_state_key=self.location,
+                     student=user,
+                     defaults={
+                         'state': '{}',
+                         'module_type': self.category,
+                         'grade': 0,
+                         'max_grade': 100
+                     })
+        score = student_record.grade
         if score is not None:
             graded = {'score': score, 'comment': self.comment}
         else:
@@ -540,10 +542,7 @@ class StaffGradedXBlock(XBlock):
                 )
             )
 
-        if self.is_instructor():
-            module.grade = score
-        else:
-            state['staff_score'] = score
+        module.grade = score
         state['comment'] = request.params.get('comment', '')
         module.state = json.dumps(state)
         module.save()
@@ -563,8 +562,6 @@ class StaffGradedXBlock(XBlock):
         Reset a students score request by staff.
         """
         require(self.is_course_staff())
-        student_id = request.params['student_id']
-        submissions_api.reset_score(student_id, unicode(self.course_id), unicode(self.block_id))
         module = StudentModule.objects.get(pk=request.params['module_id'])
         state = json.loads(module.state)
         state['staff_score'] = None
@@ -573,6 +570,7 @@ class StaffGradedXBlock(XBlock):
         state['annotated_filename'] = None
         state['annotated_mimetype'] = None
         state['annotated_timestamp'] = None
+        module.grade = 0
         module.state = json.dumps(state)
         module.save()
         log.info(
