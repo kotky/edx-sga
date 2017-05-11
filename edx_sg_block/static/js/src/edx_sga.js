@@ -25,8 +25,6 @@ function StaffGradedXBlock(runtime, element) {
             // Render template
             console.log(state)
             var content = $(element).find('#sga-content').html(template(state));
-
-            updateChangeEvent(fileUpload);
         }
 
         function renderStaffGrading(data) {

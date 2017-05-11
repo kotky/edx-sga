@@ -160,17 +160,6 @@ class StaffGradedXBlock(XBlock):
             "item_type": 'sga',  # ???
         }
 
-    def get_submission(self, submission_id=None):
-        """
-        Get student's most recent submission.
-        """
-        submissions = submissions_api.get_submissions(
-            self.student_submission_id(submission_id))
-        if submissions:
-            # If I understand docs correctly, most recent submission should
-            # be first
-            return submissions[0]
-
     def get_score(self, submission_id=None):
         """
         Return student's current score.
@@ -237,17 +226,20 @@ class StaffGradedXBlock(XBlock):
         Returns a JSON serializable representation of student's state for
         rendering in client view.
         """
-        submission = self.get_submission()
-        if submission:
-            uploaded = {"filename": submission['answer']['filename']}
-        else:
-            uploaded = None
-
         if self.annotated_sha1:
             annotated = {"filename": self.annotated_filename}
         else:
             annotated = None
-
+        # student_record = StudentModule.objects.get_or_create(
+        #             course_id=self.course_id,
+        #             module_state_key=self.location,
+        #             student=student,
+        #             defaults={
+        #                 'state': '{}',
+        #                 'module_type': self.category,
+        #                 'grade': 0,     
+        #                 'max_grade': 100
+        #             })
         score = self.score
         if score is not None:
             graded = {'score': score, 'comment': self.comment}
@@ -306,7 +298,6 @@ class StaffGradedXBlock(XBlock):
                     'username': module.student.username,
                     'fullname': module.student.profile.name,
                     'score': module.grade,
-                    'may_grade': instructor,
                     'comment': state.get("comment", ''),
                 }
 
@@ -439,16 +430,6 @@ class StaffGradedXBlock(XBlock):
         return Response(json_body=self.staff_grading_data())
 
     @XBlock.handler
-    def download_assignment(self, request, suffix=''):
-        # pylint: disable=unused-argument
-        """
-        Fetch student assignment from storage and return it.
-        """
-        answer = self.get_submission()['answer']
-        path = self._file_storage_path(answer['sha1'], answer['filename'])
-        return self.download(path, answer['mimetype'], answer['filename'])
-
-    @XBlock.handler
     def download_annotated(self, request, suffix=''):
         # pylint: disable=unused-argument
         """
@@ -462,23 +443,6 @@ class StaffGradedXBlock(XBlock):
             path,
             self.annotated_mimetype,
             self.annotated_filename
-        )
-
-    @XBlock.handler
-    def staff_download(self, request, suffix=''):
-        # pylint: disable=unused-argument
-        """
-        Return an assignment file requested by staff.
-        """
-        require(self.is_course_staff())
-        submission = self.get_submission(request.params['student_id'])
-        answer = submission['answer']
-        path = self._file_storage_path(answer['sha1'], answer['filename'])
-        return self.download(
-            path,
-            answer['mimetype'],
-            answer['filename'],
-            require_staff=True
         )
 
     @XBlock.handler
