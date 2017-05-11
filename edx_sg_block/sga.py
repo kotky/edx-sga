@@ -276,18 +276,19 @@ class StaffGradedXBlock(XBlock):
             information will be used on grading screen
             """
             # Submissions doesn't have API for this, just use model directly.
-            students = CourseEnrollment.objects.filter(
-                course_id=self.course_id).values_list('user', flat=True)
-            for student in students:
+            course_enrollments = CourseEnrollment.objects.filter(
+                course_id=self.course_id)
+            for course_enrollment in course_enrollments:
+                student = course_enrollments.user
                 module, created = StudentModule.objects.get_or_create(
                     course_id=self.course_id,
                     module_state_key=self.location,
                     student=student,
-                    grade=0,
-                    max_grade=100,
                     defaults={
                         'state': '{}',
                         'module_type': self.category,
+                        'grade': 0,     
+                        'max_grade': 100
                     })
                 if created:
                     log.info(
@@ -298,16 +299,14 @@ class StaffGradedXBlock(XBlock):
                     )
 
                 state = json.loads(module.state)
-                score = module.score
                 instructor = self.is_instructor()
                 yield {
                     'module_id': module.id,
                     'student_id': student.id,
                     'username': module.student.username,
                     'fullname': module.student.profile.name,
-                    'score': score,
-                    'needs_approval': instructor and needs_approval,
-                    'may_grade': instructor or not approved,
+                    'score': module.grade,
+                    'may_grade': instructor,
                     'comment': state.get("comment", ''),
                 }
 
@@ -578,8 +577,7 @@ class StaffGradedXBlock(XBlock):
             )
 
         if self.is_instructor():
-            uuid = request.params['submission_id']
-            submissions_api.set_score(uuid, score, self.max_score())
+            module.grade = score
         else:
             state['staff_score'] = score
         state['comment'] = request.params.get('comment', '')

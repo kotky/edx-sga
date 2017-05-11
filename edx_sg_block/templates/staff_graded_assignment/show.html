@@ -6,12 +6,6 @@
     <% if (display_name) { %>
        <b><%= display_name %></b>
     <% } %>
-    <% if (uploaded) { %>
-      <p><b>File uploaded</b> 
-        <a href="<%= downloadUrl %>"><%= uploaded.filename %></a></p>
-    <% } else { %>
-      <p>No file has been uploaded.</p>
-    <% } %>
     <% if (graded) { %>
       <p>Your score is <%= graded.score %> / <%= max_score %><br/>
         <% if (graded.comment) { %>
@@ -22,21 +16,6 @@
           <a href="<%= annotatedUrl %>"><%= annotated.filename %></a>
         <% } %>
       </p>
-    <% } else if (uploaded) { %>
-      {% trans "This assignment has not yet been graded." %}
-    <% } %>
-    <% if (upload_allowed) { %>
-    <p>
-      <% if (uploaded) { %>
-        {% trans "Upload a different file" %}
-      <% } else { %>
-        {% trans "Upload your assignment" %}
-      <% } %>
-      <div class="upload">
-        <input class="fileupload" type="file" name="assignment"/>
-        <button>Select a file</button>
-      </div>
-    </p>
     <% } %>
     <% if (error) { %>
       <p class="error"><%= error %></p>
@@ -53,8 +32,6 @@
       <tr>
         <th class="header">Username <i class="icon fa fa-sort"/></th>
         <th class="header">Name <i class="icon fa fa-sort"/></th>
-        <th class="header">Filename <i class="icon fa fa-sort"/></th>
-        <th class="header">Uploaded <i class="icon fa fa-sort"/></th>
         <th class="header">Grade <i class="icon fa fa-sort"/></th>
         <th class="header">Instructor's comments <i class="icon fa fa-sort"/></th>
         <th class="header">Annotated <i class="icon fa fa-sort"/></th>
@@ -67,14 +44,6 @@
         <tr id="row-<%= assignment.module_id %>">
           <td><%= assignment.username %></td>
           <td><%= assignment.fullname %></td>
-          <td>
-            <% if (assignment.filename) { %>
-              <a href="<%= downloadUrl %>?student_id=<%= assignment.student_id %>">
-                <%= assignment.filename %>
-              </a>
-            <% } %>
-          </td>
-          <td><%= assignment.timestamp %></td>
           <td>
             <% if (assignment.score !== null) { %>
               <%= assignment.score %> /
