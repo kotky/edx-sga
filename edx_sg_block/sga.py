@@ -349,21 +349,6 @@ class StaffGradedXBlock(XBlock):
             raise JsonHandlerError(400, 'Points must be a positive integer')
         self.points = points
 
-        # Validate weight before saving
-        weight = data.get('weight', self.weight)
-        # Check that weight is a float.
-        if weight:
-            try:
-                weight = float(weight)
-            except ValueError:
-                raise JsonHandlerError(400, 'Weight must be a decimal number')
-            # Check that we are positive
-            if weight < 0:
-                raise JsonHandlerError(
-                    400, 'Weight must be a positive decimal number'
-                )
-        self.weight = weight
-
     @XBlock.handler
     def upload_assignment(self, request, suffix=''):
         # pylint: disable=unused-argument
