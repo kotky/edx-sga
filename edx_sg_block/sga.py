@@ -70,27 +70,10 @@ class StaffGradedXBlock(XBlock):
              "the page."
     )
 
-    weight = Float(
-        display_name="Problem Weight",
-        help=("Defines the number of points each problem is worth. "
-              "If the value is not set, the problem is worth the sum of the "
-              "option point values."),
-        values={"min": 0, "step": .1},
-        scope=Scope.settings
-    )
-
     points = Integer(
         display_name="Maximum score",
         help=("Maximum grade score given to assignment by staff."),
         default=100,
-        scope=Scope.settings
-    )
-
-    staff_score = Integer(
-        display_name="Score assigned by non-instructor staff",
-        help=("Score will need to be approved by instructor before being "
-              "published."),
-        default=None,
         scope=Scope.settings
     )
 
@@ -232,7 +215,9 @@ class StaffGradedXBlock(XBlock):
             annotated = None
         if self.xmodule_runtime.anonymous_student_id:
             user = user_by_anonymous_id(self.xmodule_runtime.anonymous_student_id)
-        student_record, created = StudentModule.objects.get_or_create(
+        score = 0
+        if user:
+            student_record, created = StudentModule.objects.get_or_create(
                      course_id=self.course_id,
                      module_state_key=self.location,
                      student=user,
@@ -240,9 +225,9 @@ class StaffGradedXBlock(XBlock):
                          'state': '{}',
                          'module_type': self.category,
                          'grade': 0,
-                         'max_grade': 100
+                         'max_grade': self.max_score()
                      })
-        score = student_record.grade
+            score = student_record.grade
         if score is not None:
             graded = {'score': score, 'comment': self.comment}
         else:
@@ -281,7 +266,7 @@ class StaffGradedXBlock(XBlock):
                         'state': '{}',
                         'module_type': self.category,
                         'grade': 0,     
-                        'max_grade': 100
+                        'max_grade': self.max_score()
                     })
                 if created:
                     log.info(
@@ -563,7 +548,6 @@ class StaffGradedXBlock(XBlock):
         require(self.is_course_staff())
         module = StudentModule.objects.get(pk=request.params['module_id'])
         state = json.loads(module.state)
-        state['staff_score'] = None
         state['comment'] = ''
         state['annotated_sha1'] = None
         state['annotated_filename'] = None
