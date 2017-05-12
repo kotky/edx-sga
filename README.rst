@@ -1,10 +1,9 @@
-Staff Graded Assignment XBlock
+Staff Graded XBlock
 ==============================
 
 This package provides an XBlock for use with the edX platform which
-provides a staff graded assignment. Students are invited to upload files
-which encapsulate their work on the assignment. Instructors are then
-able to download the files and enter grades for the assignment.
+provides a staff graded block. Instructors are
+able enter grades for the block.
 
 Note that this package is both an XBlock and a Django application. 
 
