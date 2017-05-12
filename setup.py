@@ -16,7 +16,7 @@ def package_data(pkg, root_list):
 
 setup(
     name='edx-sg-block',
-    version='0.6.3',
+    version='0.6.14',
     description='edx-sg-block Staff Graded XBlock',
     license='Affero GNU General Public License v3 (GPLv3)',
     url="https://github.com/kotky/edx-sga",
