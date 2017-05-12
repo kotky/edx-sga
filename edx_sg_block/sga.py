@@ -77,6 +77,15 @@ class StaffGradedXBlock(XBlock):
         scope=Scope.settings
     )
 
+    weight = Float(
+        display_name="Problem Weight",
+        help=("Defines the number of points each problem is worth. "
+              "If the value is not set, the problem is worth the sum of the "
+              "option point values."),
+        values={"min": 0, "step": .1},
+        scope=Scope.settings
+    )
+
     comment = String(
         display_name="Instructor comment",
         default='',
@@ -309,7 +318,8 @@ class StaffGradedXBlock(XBlock):
                 (field, none_to_empty(getattr(self, field.name)), validator)
                 for field, validator in (
                     (cls.display_name, 'string'),
-                    (cls.points, 'number'))
+                    (cls.points, 'number'),
+                    (cls.weight, 'number'))
             )
 
             context = {
@@ -348,6 +358,21 @@ class StaffGradedXBlock(XBlock):
         if points < 0:
             raise JsonHandlerError(400, 'Points must be a positive integer')
         self.points = points
+
+        # Validate weight before saving
+        weight = data.get('weight', self.weight)
+        # Check that weight is a float.
+        if weight:
+            try:
+                weight = float(weight)
+            except ValueError:
+                raise JsonHandlerError(400, 'Weight must be a decimal number')
+            # Check that we are positive
+            if weight < 0:
+                raise JsonHandlerError(
+                    400, 'Weight must be a positive decimal number'
+                )
+        self.weight = weight
 
     @XBlock.handler
     def upload_assignment(self, request, suffix=''):
