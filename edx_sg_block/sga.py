@@ -309,7 +309,7 @@ class StaffGradedXBlock(XBlock):
                 (field, none_to_empty(getattr(self, field.name)), validator)
                 for field, validator in (
                     (cls.display_name, 'string'),
-                    (cls.points, 'number')
+                    (cls.points, 'number'))
             )
 
             context = {
