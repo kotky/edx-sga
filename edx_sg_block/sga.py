@@ -62,6 +62,8 @@ class StaffGradedXBlock(XBlock):
     """
     has_score = True
     icon_class = 'problem'
+    show_in_read_only_mode = True
+
     STUDENT_FILEUPLOAD_MAX_SIZE = 4 * 1000 * 1000  # 4 MB
 
     display_name = String(
