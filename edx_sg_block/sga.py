@@ -13,14 +13,14 @@ import pytz
 
 from functools import partial
 
-from courseware.models import StudentModule
-
 from django.core.exceptions import PermissionDenied
 from django.core.files import File
 from django.core.files.storage import default_storage
 from django.conf import settings
 from django.template import Context, Template
 
+from courseware.models import StudentModule
+from courseware.access import is_staff_or_instructor_on_course
 from student.models import user_by_anonymous_id, CourseEnrollment
 from submissions import api as submissions_api
 from submissions.models import StudentItem as SubmissionsStudent
@@ -269,34 +269,35 @@ class StaffGradedXBlock(XBlock):
                 course_id=self.course_id)
             for course_enrollment in course_enrollments:
                 student = course_enrollment.user
-                module, created = StudentModule.objects.get_or_create(
-                    course_id=self.course_id,
-                    module_state_key=self.location,
-                    student=student,
-                    defaults={
-                        'state': '{}',
-                        'module_type': self.category,
-                        'grade': 0,     
-                        'max_grade': self.max_score()
-                    })
-                if created:
-                    log.info(
-                        "Init for course:%s module:%s student:%s  ",
-                        module.course_id,
-                        module.module_state_key,
-                        module.student.username
-                    )
+                if not is_staff_or_instructor_on_course(student, self.course_id):
+                    module, created = StudentModule.objects.get_or_create(
+                        course_id=self.course_id,
+                        module_state_key=self.location,
+                        student=student,
+                        defaults={
+                            'state': '{}',
+                            'module_type': self.category,
+                            'grade': 0,
+                            'max_grade': self.max_score()
+                        })
+                    if created:
+                        log.info(
+                            "Init for course:%s module:%s student:%s  ",
+                            module.course_id,
+                            module.module_state_key,
+                            module.student.username
+                        )
 
-                state = json.loads(module.state)
-                instructor = self.is_instructor()
-                yield {
-                    'module_id': module.id,
-                    'student_id': student.id,
-                    'username': module.student.username,
-                    'fullname': module.student.profile.name,
-                    'score': module.grade,
-                    'comment': state.get("comment", ''),
-                }
+                    state = json.loads(module.state)
+                    instructor = self.is_instructor()
+                    yield {
+                        'module_id': module.id,
+                        'student_id': student.id,
+                        'username': module.student.username,
+                        'fullname': module.student.profile.name,
+                        'score': module.grade,
+                        'comment': state.get("comment", ''),
+                    }
 
         return {
             'assignments': list(get_student_data()),
@@ -518,7 +519,7 @@ class StaffGradedXBlock(XBlock):
         require(self.is_course_staff())
         score = request.params.get('grade', None)
         module = StudentModule.objects.get(pk=request.params['module_id'])
-        if not score:
+        if score is None:
             return Response(
                 json_body=self.validate_score_message(
                     module.course_id,
@@ -528,7 +529,7 @@ class StaffGradedXBlock(XBlock):
 
         state = json.loads(module.state)
         try:
-            score = int(score)
+            score = float(score)
         except ValueError:
             return Response(
                 json_body=self.validate_score_message(
